@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0d12" />
+  <meta name="description" content="BLOBSMITH — sculpt a living ball, then roll it into physics arenas. Build, fight, loot, rebuild." />
+  <title>BLOBSMITH — Ball Foundry</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='24' fill='%23ffb545'/%3E%3Ccircle cx='24' cy='28' r='5' fill='%2310141a'/%3E%3Ccircle cx='40' cy='28' r='5' fill='%2310141a'/%3E%3Cpath d='M22 40q10 10 20 0' stroke='%2310141a' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="assets/fonts/fonts-local.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <button class="brand" data-nav="workshop" aria-label="BLOBSMITH workshop">
+      <span class="brand-mark">
+        <svg viewBox="0 0 42 42" aria-hidden="true">
+          <circle cx="21" cy="22" r="16" fill="url(#brandGrad)"/>
+          <circle cx="15.5" cy="18.5" r="3.4" fill="#0d1117"/>
+          <circle cx="26.5" cy="18.5" r="3.4" fill="#0d1117"/>
+          <path d="M14.5 26.5q6.5 6.2 13 0" stroke="#0d1117" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <defs><radialGradient id="brandGrad" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ffe09a"/><stop offset=".55" stop-color="#ffb545"/><stop offset="1" stop-color="#e1702d"/></radialGradient></defs>
+        </svg>
+      </span>
+      <span class="brand-text">BLOBSMITH<small>BALL FOUNDRY // BAY 07</small></span>
+    </button>
+
+    <nav class="mainnav" aria-label="Main">
+      <button data-nav="workshop" class="active"><span>01</span>WORKSHOP</button>
+      <button data-nav="arenas"><span>02</span>ARENAS</button>
+    </nav>
+
+    <div class="topbar-right">
+      <div class="wallet">
+        <span class="wallet-chip" title="Scrap — used for forge upgrades"><i>⚙</i><b id="scrapVal">0</b></span>
+        <span class="wallet-chip core" title="Power cores — unlock sealed gadgets"><i>◆</i><b id="coresVal">0</b></span>
+      </div>
+      <button class="icon-btn" id="soundBtn" title="Toggle sound" aria-label="Toggle sound">♪</button>
+      <button class="icon-btn" id="helpBtn" title="How to play" aria-label="How to play">?</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ══ WORKSHOP ══════════════════════════════════════════ -->
+    <section id="workshopScreen" class="screen active">
+      <div class="workshop-grid">
+        <aside class="panel stats-panel">
+          <div class="panel-head">
+            <span class="eyebrow">SUBJECT FILE</span>
+            <span class="live-dot" title="Live build"></span>
+          </div>
+          <div class="name-line">
+            <input id="blobName" class="name-input" maxlength="10" autocomplete="off" spellcheck="false" value="PIP" aria-label="Ball callsign" />
+            <button class="dice-btn" id="diceBtn" title="Random callsign" aria-label="Random callsign">↻</button>
+          </div>
+          <div class="build-tags" id="buildTags"></div>
+
+          <div class="budget-stack">
+            <div class="budget" id="massBudget">
+              <div class="budget-top"><span>MASS</span><b><em id="massNow">58</em><small id="massMax">/ 120</small></b></div>
+              <div class="budget-bar"><i id="massBar"></i></div>
+            </div>
+            <div class="budget energy" id="energyBudget">
+              <div class="budget-top"><span>ENERGY</span><b><em id="energyNow">24</em><small id="energyMax">/ 80</small></b></div>
+              <div class="budget-bar"><i id="energyBar"></i></div>
+            </div>
+          </div>
+
+          <div class="rule"></div>
+          <div class="stats-head"><span>PERFORMANCE</span><span class="mono" id="buildCost">58 MASS</span></div>
+          <div class="stat-list" id="statList"></div>
+
+          <div class="load-hint" id="loadHint">
+            <span class="load-icon">◈</span>
+            <p>Every gram is a trade. Heavy spikes hit harder, but you turn like a fridge.</p>
+          </div>
+        </aside>
+
+        <section class="stage-panel" id="stagePanel">
+          <canvas id="previewCanvas"></canvas>
+          <div class="stage-grain"></div>
+          <div class="stage-top">
+            <span class="chip live"><i></i>LIVE FORGE</span>
+            <span class="chip mood" id="moodChip">▲ BOLD</span>
+          </div>
+          <div class="stage-rail"><span>SUBJECT 01</span><span>SHEET A</span></div>
+          <div class="stage-bottom">
+            <div class="stage-name-block">
+              <span class="stage-kicker">CALLSIGN</span>
+              <h1 id="stageName">PIP</h1>
+              <span class="stage-sub" id="stageSub">RUBBER · FIRE CORE</span>
+            </div>
+            <button class="btn primary big" id="enterArena"><span>ENTER THE ARENA</span><i>→</i></button>
+          </div>
+          <div class="stage-tip" id="stageTip">DRAG TO SPIN · CLICK TO POKE</div>
+          <div class="stage-badge" id="stageBadge">3 PARTS</div>
+        </section>
+
+        <aside class="panel build-panel">
+          <div class="tabs" id="buildTabs" role="tablist">
+            <button data-tab="body" class="active" role="tab">BODY</button>
+            <button data-tab="look" role="tab">LOOK</button>
+            <button data-tab="soul" role="tab">SOUL</button>
+            <button data-tab="parts" role="tab">PARTS</button>
+            <button data-tab="forge" role="tab">FORGE</button>
+          </div>
+          <div class="tab-scroll" id="tabContent"></div>
+          <div class="build-footer">
+            <span id="partSummary">3 PARTS EQUIPPED</span>
+            <button class="mini-btn" id="randomBtn">RANDOMIZE</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ══ ARENA SELECT ═════════════════════════════════════ -->
+    <section id="arenasScreen" class="screen">
+      <div class="arenas-wrap">
+        <div class="arenas-head">
+          <div class="arenas-title">
+            <span class="eyebrow">SELECT DESTINATION</span>
+            <h1>FOUR WAYS TO <em>ROLL</em></h1>
+            <p>Your build is the moveset. Mass wins shoves, grip wins races, and style wins the lobby.</p>
+          </div>
+          <div class="build-mini" id="arenaBuild"></div>
+        </div>
+        <div class="arena-grid" id="arenaGrid"></div>
+        <div class="arena-foot">
+          <span><b>TIP</b> — Win any arena to earn scrap, cores, and sealed gadget drops.</span>
+          <span class="mono">BUDGET <b id="arenaBudget">58 / 120</b></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PLAY ═════════════════════════════════════════════ -->
+    <section id="playScreen" class="screen play-screen">
+      <canvas id="gameCanvas"></canvas>
+      <div class="arena-vignette"></div>
+
+      <div class="game-top">
+        <div class="hud-objective">
+          <span class="hud-mode" id="hudMode">SUMO RING</span>
+          <b id="hudObjective">SHOVE RUSTY OUT</b>
+        </div>
+        <div class="hud-center">
+          <div id="hudTimer">75</div>
+          <small>TIME LEFT</small>
+        </div>
+        <div class="hud-right">
+          <button class="icon-btn" id="pauseBtn" aria-label="Pause">Ⅱ</button>
+        </div>
+      </div>
+
+      <div class="hud-sub" id="hudSub"></div>
+      <div class="boss-bar-wrap hidden" id="bossBarWrap">
+        <div class="boss-bar-label"><span>ARENA WARDEN</span><b id="bossHpText">100%</b></div>
+        <div class="boss-bar"><i id="bossHpBar"></i></div>
+      </div>
+
+      <div class="hud-notice" id="hudNotice"></div>
+
+      <div class="hud-bottom">
+        <div class="pilot-card">
+          <canvas id="pilotPortrait" class="pilot-portrait"></canvas>
+          <div class="pilot-info">
+            <div class="pilot-name-row"><b id="pilotName">PIP</b><span id="pilotMood">BOLD</span></div>
+            <div class="pilot-hp"><i id="pilotHp"></i></div>
+            <small id="pilotStatus">READY TO ROLL</small>
+          </div>
+        </div>
+        <div class="ability-row">
+          <div class="ability" id="dashAbility">
+            <div class="ability-ring"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"/><circle class="fill" id="dashRing" cx="22" cy="22" r="18"/></svg><b>⇢</b></div>
+            <span>DASH</span><small>SPACE</small>
+          </div>
+          <div class="ability core" id="coreAbility">
+            <div class="ability-ring"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"/><circle class="fill" id="coreRing" cx="22" cy="22" r="18"/></svg><b id="coreGlyph">🔥</b></div>
+            <span>CORE</span><small>SHIFT</small>
+          </div>
+        </div>
+        <div class="hud-help"><span>WASD</span> MOVE <span>SPACE</span> DASH <span>SHIFT</span> CORE</div>
+      </div>
+
+      <div class="mobile-controls" id="mobileControls">
+        <div class="joystick" id="joystick"><div class="stick" id="stick"><i></i></div></div>
+        <div class="action-buttons">
+          <button class="action dash" id="dashBtn"><b>⇢</b><span>DASH</span></button>
+          <button class="action core" id="coreBtn"><b>✹</b><span>CORE</span></button>
+        </div>
+      </div>
+
+      <div class="countdown hidden" id="countdownOverlay"><span></span></div>
+
+      <div class="overlay hidden" id="pauseOverlay">
+        <div class="modal small">
+          <span class="eyebrow">PAUSED</span>
+          <h2>TAKE A BREATH</h2>
+          <p class="muted">Your ball is fine. The arena is patient. Mostly.</p>
+          <div class="modal-actions">
+            <button class="btn primary" id="resumeBtn">RESUME</button>
+            <button class="btn ghost" id="quitBtn">BACK TO ARENAS</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="resultOverlay"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ══ OVERLAYS ════════════════════════════════════════════ -->
+<div class="overlay hidden" id="helpOverlay">
+  <div class="modal help-modal">
+    <button class="modal-close" id="helpClose" aria-label="Close">✕</button>
+    <span class="eyebrow" id="helpEyebrow">FIELD MANUAL</span>
+    <h2 id="helpTitle">SMITH. ROLL. LOOT. REPEAT.</h2>
+    <div class="help-grid">
+      <div class="help-col">
+        <h3><span>01</span> THE LOOP</h3>
+        <p>Sculpt your ball in the workshop. Roll it into arenas. Win gadgets and materials. Rebuild smarter.</p>
+        <h3><span>02</span> THE BUDGET</h3>
+        <p>Every part costs <b>Mass</b> and <b>Energy</b>. The bars in your subject file are hard limits — you cannot enter the arena over budget.</p>
+        <h3><span>03</span> MOOD MATTERS</h3>
+        <p><b>Angry</b> hits harder but steers worse. <b>Calm</b> tanks damage. <b>Scared</b> is fast and fragile. Pick a personality, live with the physics.</p>
+      </div>
+      <div class="help-col">
+        <h3><span>04</span> CONTROLS</h3>
+        <div class="key-list">
+          <div><kbd>W A S D</kbd><span>roll &amp; steer</span></div>
+          <div><kbd>SPACE</kbd><span>dash (aim with mouse)</span></div>
+          <div><kbd>SHIFT</kbd><span>power core ability</span></div>
+          <div><kbd>ESC</kbd><span>pause</span></div>
+        </div>
+        <p class="muted small">On touch: left joystick, DASH and CORE buttons. Everything is playable on a phone.</p>
+        <h3><span>05</span> THE ARENAS</h3>
+        <ul class="help-list">
+          <li><b>Sumo Ring</b> — shove the rival past the rim.</li>
+          <li><b>Obstacle Race</b> — two laps, one very narrow track.</li>
+          <li><b>Boss Battle</b> — dash into a warden until it stops.</li>
+          <li><b>Showcase</b> — let the lobby judge your ball.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="help-foot">
+      <span class="mono">100 GADGETS · 20 TOOLS · 4 MATERIALS · 5 MOODS</span>
+      <button class="btn primary" id="helpStart">START SMITHING</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
